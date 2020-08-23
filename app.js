@@ -13,30 +13,45 @@ const server = http.createServer(app);
 
 const io = socketIo(server);
 
-io.on("connection", (socket) => {
-  console.log("Client connected");
+let commentsState = {};
+let editorState = {};
 
+io.on("connection", (socket) => {
   socket.on("join", ({ name, room }, callback) => {
     const { error, user } = addUser({ id: socket.id, name, room });
 
-    if (error) return callback(error);
+    // if (error) return callback(error);
+    if (error) return console.log(error);
 
     socket.join(user.room);
 
-    io.to(user.room).emit("roomData", {
+    // for new users, give them a copy of current editor state and comments
+    let data = {};
+    data.editor = editorState[user.room];
+    data.comments = commentsState[user.room];
+    socket.emit("NewData", data);
+
+    io.to(user.room).emit("RoomData", {
       room: user.room,
-      users: getUsersInRoom(user.name),
+      users: getUsersInRoom(user.room),
     });
   });
 
   socket.on("data", (data) => {
-    console.log("emitting data", data);
+    // keep track of the current state of editor and comments
+    if (data.editor) editorState[data.room] = data.editor;
+    if (data.comments) commentsState[data.room] = data.comments;
+
     socket.broadcast.to(data.room).emit("NewData", data);
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", (room) => {
     const user = removeUser(socket.id);
-    console.log("Client disconnected");
+    if (user === undefined) return;
+    io.to(user.room).emit("RoomData", {
+      room: user.room,
+      users: getUsersInRoom(user.room),
+    });
   });
 });
 
