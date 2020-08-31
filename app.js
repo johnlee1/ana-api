@@ -52,6 +52,12 @@ io.on("connection", (socket) => {
       room: user.room,
       users: getUsersInRoom(user.room),
     });
+
+    // clear state data for room if no more users left
+    if (getUsersInRoom(user.room).length === 0) {
+      editorState[user.room] = undefined;
+      commentsState[user.room] = undefined;
+    }
   });
 });
 
