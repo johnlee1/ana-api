@@ -15,6 +15,7 @@ const io = socketIo(server);
 
 let commentsState = {};
 let editorState = {};
+let dataOffsetKeysState = {};
 
 io.on("connection", (socket) => {
   socket.on("join", ({ name, room }, callback) => {
@@ -29,6 +30,7 @@ io.on("connection", (socket) => {
     let data = {};
     data.editor = editorState[user.room];
     data.comments = commentsState[user.room];
+    data.dataOffsetKeys = dataOffsetKeysState[user.room];
     socket.emit("NewData", data);
 
     io.to(user.room).emit("RoomData", {
@@ -41,6 +43,8 @@ io.on("connection", (socket) => {
     // keep track of the current state of editor and comments
     if (data.editor) editorState[data.room] = data.editor;
     if (data.comments) commentsState[data.room] = data.comments;
+    if (data.dataOffsetKeys)
+      dataOffsetKeysState[data.room] = data.dataOffsetKeys;
 
     socket.broadcast.to(data.room).emit("NewData", data);
   });
@@ -57,6 +61,7 @@ io.on("connection", (socket) => {
     if (getUsersInRoom(user.room).length === 0) {
       editorState[user.room] = undefined;
       commentsState[user.room] = undefined;
+      dataOffsetKeysState[user.room] = undefined;
     }
   });
 });
