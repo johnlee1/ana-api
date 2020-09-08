@@ -4,7 +4,7 @@ This is the server-side code for Ana. Ana allows you to collaborately comment on
 
 ## tech stack
 
-Express.js, Node.js, Material UI, Socket.io
+Express.js, Node.js, and Socket.io
 
 ## deployment
 
